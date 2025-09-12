@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Web App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to bottom, #1f2937, #111827);
+        }
+        /* Fade-in animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Hamburger menu */
+        #menu-toggle {
+            display: none;
+        }
+        #menu-toggle:checked ~ #menu {
+            display: block;
+        }
+        @media (max-width: 640px) {
+            #menu {
+                display: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-200">
+    <!-- Navigation Bar -->
+    <header class="bg-gray-900 shadow-xl sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="{{ url_for('home_page') }}" class="text-3xl font-bold text-indigo-400 hover:text-indigo-300 transition-colors duration-300">
+                Web App
+            </a>
+            <!-- Hamburger Menu for Mobile -->
+            <input type="checkbox" id="menu-toggle" class="hidden">
+            <label for="menu-toggle" class="menu-icon sm:hidden text-2xl cursor-pointer text-indigo-400 hover:text-indigo-300">
+                <i class="fas fa-bars"></i>
+            </label>
+            <!-- Navigation Links -->
+            <div id="menu" class="space-x-6 flex items-center sm:flex sm:space-x-6">
+                <a href="{{ url_for('home_page') }}" class="px-4 py-2 text-indigo-400 font-medium rounded-full hover:bg-gray-700 transition-colors duration-300">Домой</a>
+                <a href="{{ url_for('sign_in_page') }}" class="px-5 py-2 text-indigo-400 font-medium rounded-full hover:bg-gray-700 transition-colors duration-300" aria-label="Войти в систему">
+                    Вход
+                </a>
+                <a href="{{ url_for('sign_up_page') }}" class="px-5 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-1" aria-label="Зарегистрироваться">
+                    Регистрация
+                </a>
+            </div>
+        </nav>
+    </header>
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-6 py-10">
+        <!-- Flash Messages Section -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-8 space-y-4">
+                    {% for category, message in messages %}
+                        <div class="{% if category == 'error' %}bg-red-600 bg-opacity-20 border-red-500 text-red-300{% elif category == 'warning' %}bg-yellow-600 bg-opacity-20 border-yellow-500 text-yellow-300{% else %}bg-green-600 bg-opacity-20 border-green-500 text-green-300{% endif %} px-6 py-4 rounded-lg relative shadow-lg fade-in" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
+                            <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-200" onclick="this.parentElement.remove()" aria-label="Закрыть сообщение">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <!-- Sign-Up Form -->
+        <div class="max-w-md mx-auto bg-gray-800 rounded-lg shadow-2xl p-8 fade-in">
+            <h2 class="text-3xl font-bold text-white text-center mb-6">Создать аккаунт</h2>
+            <form method="POST" class="space-y-6">
+                <div class="form-group">
+                    <label for="user_name" class="block text-sm font-medium text-gray-300 mb-2">
+                        Имя пользователя
+                    </label>
+                    <input type="text"
+                           name="user_name"
+                           id="user_name"
+                           placeholder="Введите имя пользователя"
+                           required
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+                           aria-required="true"
+                           aria-describedby="user_name_help">
+                    <small id="user_name_help" class="text-gray-400 text-xs">Выберите уникальное имя пользователя.</small>
+                </div>
+                <div class="form-group">
+                    <label for="user_email" class="block text-sm font-medium text-gray-300 mb-2">
+                        Email
+                    </label>
+                    <input type="email"
+                           name="user_email"
+                           id="user_email"
+                           placeholder="Введите ваш email"
+                           required
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+                           aria-required="true"
+                           aria-describedby="user_email_help">
+                    <small id="user_email_help" class="text-gray-400 text-xs">Мы никогда не поделимся вашим email.</small>
+                </div>
+                <div class="form-group">
+                    <label for="user_age" class="block text-sm font-medium text-gray-300 mb-2">
+                        Возраст
+                    </label>
+                    <input type="number"
+                           name="user_age"
+                           id="user_age"
+                           placeholder="Введите ваш возраст"
+                           min="13"
+                           max="120"
+                           required
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+                           aria-required="true"
+                           aria-describedby="user_age_help">
+                    <small id="user_age_help" class="text-gray-400 text-xs">Минимальный возраст: 13 лет.</small>
+                </div>
+                <div class="form-group">
+                    <label for="user_password" class="block text-sm font-medium text-gray-300 mb-2">
+                        Пароль
+                    </label>
+                    <input type="password"
+                           name="user_password"
+                           id="user_password"
+                           placeholder="Введите ваш пароль"
+                           required
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+                           aria-required="true"
+                           aria-describedby="user_password_help">
+                    <small id="user_password_help" class="text-gray-400 text-xs">Пароль должен быть не менее 6 символов.</small>
+                </div>
+                <button type="submit"
+                        class="w-full px-6 py-3 bg-indigo-600 text-white font-medium rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-1">
+                    Создать аккаунт
+                </button>
+            </form>
+            <div class="text-center mt-6 text-gray-400">
+                <p>Уже есть аккаунт? <a href="{{ url_for('sign_in_page') }}" class="text-indigo-400 hover:text-indigo-300 transition-colors duration-300">Войти</a></p>
+            </div>
+        </div>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-gray-900 shadow-inner">
+        <div class="container mx-auto px-6 py-6 text-center text-gray-400">
+            <div class="mb-4">
+                <a href="{{ url_for('home_page') }}" class="text-indigo-400 hover:text-indigo-300 mx-2">Домой</a>
+                <a href="#" class="text-indigo-400 hover:text-indigo-300 mx-2">О нас</a>
+                <a href="#" class="text-indigo-400 hover:text-indigo-300 mx-2">Контакты</a>
+                <a href="#" class="text-indigo-400 hover:text-indigo-300 mx-2">Политика конфиденциальности</a>
+            </div>
+            <div class="mb-4">
+                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="Twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="Facebook">
+                    <i class="fab fa-facebook"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+            <p>&copy; 2025 Web App. Все права защищены.</p>
+        </div>
+    </footer>
+    <!-- JavaScript for Hamburger Menu and Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hamburger menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const menu = document.getElementById('menu');
+            menuToggle.addEventListener('change', () => {
+                menu.classList.toggle('hidden', !menuToggle.checked);
+            });
+            // Trigger fade-in animations on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

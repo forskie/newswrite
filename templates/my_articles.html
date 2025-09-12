@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои статьи</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">Мои статьи</h1>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('create_article') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Создать статью
+                </a>
+                <a href="{{ url_for('home_page_logged') }}" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                    Главная
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="bg-green-600 bg-opacity-20 border border-green-500 text-green-300 px-4 py-3 rounded mb-4">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-2xl font-bold text-blue-400">{{ articles|length }}</div>
+                <div class="text-gray-400">Всего статей</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-2xl font-bold text-green-400">
+                    {{ articles|selectattr('status', 'equalto', 'published')|list|length }}
+                </div>
+                <div class="text-gray-400">Опубликовано</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-2xl font-bold text-yellow-400">
+                    {{ articles|selectattr('status', 'equalto', 'draft')|list|length }}
+                </div>
+                <div class="text-gray-400">Черновики</div>
+            </div>
+        </div>
+
+        <!-- Articles List -->
+        <div class="bg-gray-800 rounded-lg shadow-lg">
+            {% if articles %}
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-white mb-6">Список статей</h2>
+                
+                <!-- Articles -->
+                <div class="space-y-4">
+                    {% for article in articles %}
+                    <div class="bg-gray-700 p-6 rounded-lg hover:bg-gray-650 transition-colors">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-lg font-semibold text-white">
+                                <a href="{{ url_for('view_article', id=article.id) }}" class="hover:text-blue-400 transition-colors">
+                                    {{ article.title }}
+                                </a>
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                {% if article.status == 'published' %}
+                                <span class="px-3 py-1 text-xs font-medium bg-green-600 text-white rounded-full">
+                                    Опубликовано
+                                </span>
+                                {% else %}
+                                <span class="px-3 py-1 text-xs font-medium bg-yellow-600 text-white rounded-full">
+                                    Черновик
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Article Info -->
+                        <div class="text-gray-400 text-sm mb-4">
+                            <span>Категория: <span class="text-blue-400">{{ article.category }}</span></span>
+                            <span class="mx-2">•</span>
+                            <span>{{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                        
+                        <!-- Content Preview -->
+                        <p class="text-gray-300 mb-4">
+                            {{ article.content[:200] }}{% if article.content|length > 200 %}...{% endif %}
+                        </p>
+                        
+                        <!-- Tags -->
+                        {% if article.tags %}
+                        <div class="mb-4">
+                            {% for tag in article.tags.split(',') %}
+                            {% if tag.strip() %}
+                            <span class="inline-block bg-gray-600 text-gray-200 px-2 py-1 text-xs rounded mr-2 mb-1">
+                                {{ tag.strip() }}
+                            </span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Actions -->
+                        <div class="flex justify-between items-center">
+                            <div class="flex space-x-4">
+                                <a href="{{ url_for('view_article', id=article.id) }}" 
+                                   class="text-blue-400 hover:text-blue-300 text-sm">
+                                    Просмотр
+                                </a>
+                                <a href="#" class="text-yellow-400 hover:text-yellow-300 text-sm">
+                                    Редактировать
+                                </a>
+                            </div>
+                            
+                            <!-- Delete Button -->
+                            <form method="POST" action="{{ url_for('delete_article', id=article.id) }}" 
+                                  onsubmit="return confirm('Вы уверены, что хотите удалить эту статью?')" 
+                                  class="inline">
+                                <button type="submit" 
+                                        class="text-red-400 hover:text-red-300 text-sm">
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="p-12 text-center">
+                <div class="text-6xl mb-4">📝</div>
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">У вас пока нет статей</h3>
+                <p class="text-gray-500 mb-6">Начните создавать контент прямо сейчас!</p>
+                <a href="{{ url_for('create_article') }}" 
+                   class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    Создать первую статью
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
+
+</body>
+</html>

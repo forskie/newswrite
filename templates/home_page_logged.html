@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if title %}{{ title }} - Flask App{% else %}Flask App{% endif %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .7;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    <header class="bg-gray-800 shadow-xl rounded-b-lg">
+        <nav class="container mx-auto px-6 py-5 flex justify-between items-center">
+            <a href="{{ url_for('home_page') }}" class="text-3xl font-bold text-indigo-400 rounded-md transition-colors duration-300">
+                NewsWrite Pro
+            </a>
+            <div class="flex items-center space-x-6">
+                <!-- User Info -->
+                {% if session.get('user_id') %}
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-400">Добро пожаловать, <span class="text-indigo-400 font-semibold">{{ session.get('username', 'Пользователь') }}</span></span>
+                    <div class="h-8 w-px bg-gray-600"></div>
+                    <a href="{{ url_for('logout') }}" class="px-5 py-2 bg-red-500 text-white font-medium rounded-full shadow-lg hover:bg-red-600 transition-all duration-300 transform hover:-translate-y-1">
+                        Выход
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <!-- Flash Messages Section -->
+    <main class="flex-grow container mx-auto px-6 py-10">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-8">
+            {% for message in messages %}
+            <div class="bg-green-600 bg-opacity-20 border border-green-500 text-green-300 px-6 py-4 rounded-lg relative mb-4 shadow-lg" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Hero Section -->
+        <div class="gradient-bg rounded-2xl p-8 mb-10 text-center text-white shadow-2xl">
+            <h1 class="text-4xl font-bold mb-4">Добро пожаловать в NewsWrite Pro</h1>
+            <p class="text-xl opacity-90 mb-6">Создавайте, редактируйте и публикуйте статьи с профессиональными инструментами</p>
+            <div class="flex justify-center space-x-4">
+                <a href="{{ url_for('create_article') }}" class="px-8 py-3 bg-white text-indigo-600 font-bold rounded-full shadow-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+                    Создать статью
+                </a>
+                <a href="{{ url_for('my_articles') }}" class="px-8 py-3 border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-indigo-600 transition-all duration-300">
+                    Мои статьи
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center card-hover">
+                <div class="text-3xl font-bold text-blue-400 mb-2">{{ stats.total_articles or 0 }}</div>
+                <div class="text-gray-400">Всего статей</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center card-hover">
+                <div class="text-3xl font-bold text-green-400 mb-2">{{ stats.published_articles or 0 }}</div>
+                <div class="text-gray-400">Опубликовано</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center card-hover">
+                <div class="text-3xl font-bold text-yellow-400 mb-2">{{ stats.draft_articles or 0 }}</div>
+                <div class="text-gray-400">Черновики</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center card-hover">
+                <div class="text-3xl font-bold text-purple-400 mb-2">{{ stats.total_views or 0 }}</div>
+                <div class="text-gray-400">Просмотры</div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Recent Articles -->
+            <div class="lg:col-span-2">
+                <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">Недавние статьи</h2>
+                        <a href="{{ url_for('my_articles') }}" class="text-indigo-400 hover:text-indigo-300 font-medium">
+                            Смотреть все →
+                        </a>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        {% if recent_articles %}
+                        {% for article in recent_articles %}
+                        <div class="bg-gray-700 p-6 rounded-xl hover:bg-gray-650 transition-colors duration-300 card-hover">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-semibold text-white hover:text-indigo-400 transition-colors cursor-pointer">
+                                    <a href="{{ url_for('view_article', id=article.id) }}">{{ article.title }}</a>
+                                </h3>
+                                <div class="flex space-x-2">
+                                    {% if article.status == 'published' %}
+                                    <span class="px-3 py-1 text-xs font-medium bg-green-600 text-green-100 rounded-full">Опубликовано</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 text-xs font-medium bg-yellow-600 text-yellow-100 rounded-full">Черновик</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-3">{{ article.excerpt or article.content[:150] + '...' }}</p>
+                            <div class="flex justify-between items-center text-xs text-gray-500">
+                                <span>{{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                <div class="flex space-x-4">
+                                    <a href="{{ url_for('view_article', id=article.id) }}" class="text-green-400 hover:text-green-300">Просмотр</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-12">
+                            <div class="text-6xl mb-4">📝</div>
+                            <h3 class="text-xl font-semibold text-gray-300 mb-2">У вас пока нет статей</h3>
+                            <p class="text-gray-500 mb-6">Начните создавать контент прямо сейчас!</p>
+                            <a href="{{ url_for('create_article') }}" class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-full hover:bg-indigo-700 transition-colors duration-300">
+                                Создать первую статью
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Quick Actions -->
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-4">Быстрые действия</h3>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('create_article') }}" class="block w-full px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-300 text-center">
+                            ✍️ Новая статья
+                        </a>
+                        <a href="{{ url_for('my_articles') }}" class="block w-full px-4 py-3 bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 transition-colors duration-300 text-center">
+                            📚 Все статьи
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-4">💡 Совет дня</h3>
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-lg">
+                        <p class="text-white text-sm">
+                            Используйте заголовки и подзаголовки для лучшей структуры статьи. Это поможет читателям легче воспринимать контент!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-4">Активность</h3>
+                    <div class="space-y-3 text-sm">
+                        {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-indigo-400 rounded-full pulse-animation"></div>
+                            <span class="text-gray-400">{{ activity.description }}</span>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-gray-500 text-center py-4">
+                            Активность пока отсутствует
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-gray-800 shadow-inner rounded-t-lg">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500 text-sm">
+            &copy; 2024 NewsWrite Pro. Все права защищены.
+        </div>
+    </footer>
+
+    <script>
+        // Add some interactive functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scrolling for anchor links
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Add loading states to buttons
+            const buttons = document.querySelectorAll('a[href*="create"], a[href*="edit"]');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.innerHTML = '<span class="animate-spin">⟳</span> Загрузка...';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
