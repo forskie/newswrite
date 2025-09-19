@@ -1,2 +1,7 @@
-/venv
-/instance
+# Python virtual environments
+venv/
+env/
+.venv/
+
+# Instance folder
+instance/
