@@ -1,186 +1,110 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добро пожаловать - Web App</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(to bottom, #1f2937, #111827);
-        }
-        /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-        /* Fade-in animation for elements */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 1s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        /* Hamburger menu */
-        #menu-toggle {
-            display: none;
-        }
-        #menu-toggle:checked ~ #menu {
-            display: block;
-        }
-        @media (max-width: 640px) {
-            #menu {
-                display: none;
-            }
-            .menu-icon {
-                display: block;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsWrite Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col text-gray-200">
-    <!-- Navigation Bar -->
-    <header class="bg-gray-900 shadow-xl sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="{{ url_for('home_page') }}" class="text-3xl font-bold text-indigo-400 hover:text-indigo-300 transition-colors duration-300">
-                Web App
-            </a>
-            <!-- Hamburger Menu for Mobile -->
-            <input type="checkbox" id="menu-toggle" class="hidden">
-            <label for="menu-toggle" class="menu-icon sm:hidden text-2xl cursor-pointer text-indigo-400 hover:text-indigo-300">
-                <i class="fas fa-bars"></i>
-            </label>
-            <!-- Navigation Links -->
-            <div id="menu" class="space-x-6 flex items-center sm:flex sm:space-x-6">
-                <a href="#features" class="px-4 py-2 text-indigo-400 font-medium rounded-full hover:bg-gray-700 transition-colors duration-300">Возможности</a>
-                <a href="#about" class="px-4 py-2 text-indigo-400 font-medium rounded-full hover:bg-gray-700 transition-colors duration-300">О нас</a>
-                <a href="{{ url_for('sign_in_page') }}" class="px-5 py-2 text-indigo-400 font-medium rounded-full hover:bg-gray-700 transition-colors duration-300" aria-label="Войти в систему">
-                    Вход
-                </a>
-                <a href="{{ url_for('sign_up_page') }}" class="px-5 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-1" aria-label="Зарегистрироваться">
-                    Регистрация
-                </a>
-            </div>
-        </nav>
-    </header>
-    <!-- Main Content -->
-    <main class="flex-grow">
-        <!-- Hero Section -->
-        <section class="bg-gradient-to-r from-indigo-900 to-gray-900 text-center py-20 px-6">
-            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 fade-in">Создавайте, публикуйте, вдохновляйте!</h1>
-            <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto fade-in" style="animation-delay: 0.2s;">
-                Присоединяйтесь к нашей платформе, чтобы делиться своими идеями, публиковать статьи и взаимодействовать с сообществом.
-            </p>
-            <div class="space-x-4 fade-in" style="animation-delay: 0.4s;">
-                <a href="{{ url_for('sign_up_page') }}" class="inline-block px-8 py-4 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-1">
-                    Начать сейчас
-                </a>
-                <a href="{{ url_for('sign_in_page') }}" class="inline-block px-8 py-4 bg-gray-700 text-indigo-300 font-semibold rounded-full hover:bg-gray-600 transition-all duration-300">
-                    Войти
-                </a>
-            </div>
-        </section>
-        <!-- Flash Messages Section -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <section class="container mx-auto px-6 mb-8">
-                    <div class="space-y-4">
-                        {% for category, message in messages %}
-                            <div class="{% if category == 'error' %}bg-red-600 bg-opacity-20 border-red-500 text-red-300{% elif category == 'warning' %}bg-yellow-600 bg-opacity-20 border-yellow-500 text-yellow-300{% else %}bg-green-600 bg-opacity-20 border-green-500 text-green-300{% endif %} px-6 py-4 rounded-lg relative shadow-lg fade-in" role="alert">
-                                <span class="block sm:inline">{{ message }}</span>
-                                <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-200" onclick="this.parentElement.remove()" aria-label="Закрыть сообщение">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            {% endif %}
-        {% endwith %}
-        <!-- Features Section -->
-        <section id="features" class="container mx-auto px-6 py-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12 fade-in">Почему выбирают нас?</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center fade-in" style="animation-delay: 0.2s;">
-                    <i class="fas fa-pen-nib text-indigo-400 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-white mb-2">Создавайте статьи</h3>
-                    <p class="text-gray-300">Пишите и публикуйте статьи в удобном редакторе с поддержкой категорий и тегов.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center fade-in" style="animation-delay: 0.4s;">
-                    <i class="fas fa-folder-open text-indigo-400 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-white mb-2">Управляйте контентом</h3>
-                    <p class="text-gray-300">Редактируйте, публикуйте или сохраняйте черновики ваших статей в личном кабинете.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-center fade-in" style="animation-delay: 0.6s;">
-                    <i class="fas fa-users text-indigo-400 text-4xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-white mb-2">Присоединяйтесь к сообществу</h3>
-                    <p class="text-gray-300">Делитесь идеями и получайте обратную связь от других авторов.</p>
-                </div>
-            </div>
-        </section>
-        <!-- About Section -->
-        <section id="about" class="bg-gray-800 py-16">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 fade-in">О нашей платформе</h2>
-                <p class="text-lg text-gray-300 max-w-3xl mx-auto mb-8 fade-in" style="animation-delay: 0.2s;">
-                    Web App — это место, где вы можете выразить себя через статьи, делиться знаниями и вдохновлять других. Войдите, чтобы начать творить!
-                </p>
-                <a href="{{ url_for('sign_up_page') }}" class="inline-block px-8 py-4 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-1 fade-in" style="animation-delay: 0.4s;">
-                    Зарегистрироваться
-                </a>
-            </div>
-        </section>
-    </main>
-    <!-- Footer -->
-    <footer class="bg-gray-900 shadow-inner">
-        <div class="container mx-auto px-6 py-6 text-center text-gray-400">
-            <div class="mb-4">
-                <a href="#features" class="text-indigo-400 hover:text-indigo-300 mx-2">Возможности</a>
-                <a href="#about" class="text-indigo-400 hover:text-indigo-300 mx-2">О нас</a>
-                <a href="#" class="text-indigo-400 hover:text-indigo-300 mx-2">Контакты</a>
-                <a href="#" class="text-indigo-400 hover:text-indigo-300 mx-2">Политика конфиденциальности</a>
-            </div>
-            <div class="mb-4">
-                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="Twitter">
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="Facebook">
-                    <i class="fab fa-facebook"></i>
-                </a>
-                <a href="#" class="text-gray-400 hover:text-indigo-300 mx-2" aria-label="GitHub">
-                    <i class="fab fa-github"></i>
-                </a>
-            </div>
-            <p>&copy; 2025 Web App. Все права защищены.</p>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+  <!-- Navigation -->
+  <header class="bg-gray-900 border-b border-gray-800">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="{{ url_for('home_page') }}" class="text-2xl font-bold text-indigo-400 hover:text-indigo-300">
+        NewsWrite Pro
+      </a>
+      <div class="space-x-8 text-sm font-medium">
+        <a href="#features" class="hover:text-indigo-400 transition">Возможности</a>
+        <a href="{{ url_for('about_us') }}" class="hover:text-indigo-400 transition">О нас</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-6 py-20 flex flex-col lg:flex-row items-center gap-12">
+    <div class="flex-1 text-center lg:text-left">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">
+        Профессиональный инструмент<br> для написания и публикации статей
+      </h1>
+      <p class="text-lg text-gray-400 mb-8 max-w-xl">
+        NewsWrite Pro помогает авторам и редакциям писать, редактировать и публиковать статьи в удобной рабочей среде.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+        <a href="{{ url_for('sign_up_page') }}" class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">
+          Зарегистрироваться
+        </a>
+        <a href="{{ url_for('about_us') }}" class="px-8 py-3 border border-gray-600 text-gray-300 rounded-lg hover:border-indigo-500 hover:text-indigo-400 transition">
+          Узнать больше
+        </a>
+      </div>
+    </div>
+    <div class="flex-1">
+      <div class="bg-gray-900 rounded-xl p-8 shadow-lg border border-gray-800">
+        <h3 class="text-lg font-semibold text-white mb-4">Пример редактора</h3>
+        <div class="bg-gray-800 rounded-lg p-6 text-left text-gray-400 text-sm font-mono leading-relaxed">
+          <span class="text-indigo-400"># Вдохновляй других</span><br>
+          Пишите профессиональные статьи в современном редакторе.<br><br>
+          <span class="text-green-400">- Управление черновиками</span><br>
+          <span class="text-green-400">- Простая публикация</span><br>
+          <span class="text-green-400">- Поддержка тегов</span>
         </div>
-    </footer>
-    <!-- JavaScript for Hamburger Menu and Animations -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Hamburger menu toggle
-            const menuToggle = document.getElementById('menu-toggle');
-            const menu = document.getElementById('menu');
-            menuToggle.addEventListener('change', () => {
-                menu.classList.toggle('hidden', !menuToggle.checked);
-            });
-            // Trigger fade-in animations on scroll
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('fade-in');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1 });
-            document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-        });
-    </script>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="bg-gray-900 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-3xl font-bold text-white text-center mb-16">Возможности NewsWrite Pro</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="bg-gray-800 p-8 rounded-xl shadow hover:shadow-xl transition">
+          <i class="fas fa-pen-nib text-indigo-400 text-2xl mb-4"></i>
+          <h3 class="text-xl font-semibold text-white mb-2">Редактор</h3>
+          <p class="text-gray-400 text-sm">Минималистичный редактор для написания, форматирования и сохранения статей.</p>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-xl shadow hover:shadow-xl transition">
+          <i class="fas fa-layer-group text-indigo-400 text-2xl mb-4"></i>
+          <h3 class="text-xl font-semibold text-white mb-2">Управление</h3>
+          <p class="text-gray-400 text-sm">Удобная система категорий, тегов и черновиков для структурирования контента.</p>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-xl shadow hover:shadow-xl transition">
+          <i class="fas fa-users text-indigo-400 text-2xl mb-4"></i>
+          <h3 class="text-xl font-semibold text-white mb-2">Сообщество</h3>
+          <p class="text-gray-400 text-sm">Общайтесь с коллегами, получайте обратную связь и делитесь опытом.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="container mx-auto px-6 py-20">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl font-bold text-white mb-6">О платформе</h2>
+      <p class="text-gray-400 text-lg leading-relaxed">
+        NewsWrite Pro создан для профессионалов, которым важно качество контента и удобство работы.
+        Мы объединяем мощные инструменты для авторов и простоту интерфейса, чтобы вы могли сосредоточиться
+        на самом главном — создании ценного контента.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-800">
+    <div class="container mx-auto px-6 py-6 flex flex-col sm:flex-row justify-between items-center text-gray-500 text-sm">
+      <p>&copy; 2025 NewsWrite Pro. Все права защищены.</p>
+      <div class="flex space-x-4 mt-4 sm:mt-0">
+        <a href="#" class="hover:text-indigo-400">Политика</a>
+        <a href="#" class="hover:text-indigo-400">Контакты</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

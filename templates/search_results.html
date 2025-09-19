@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if query %}Поиск: {{ query }} - NewsWrite Pro{% else %}NewsWrite Pro{% endif %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    body { font-family: 'Roboto', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col">
+
+  <!-- Navigation -->
+  <header class="bg-gray-900 border-b border-gray-800">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="{{ url_for('home_page') }}" class="text-xl font-bold text-indigo-400 hover:text-indigo-300">
+        NewsWrite Pro
+      </a>
+      <div class="flex-1 max-w-lg mx-8">
+        <form action="{{ url_for('search') }}" method="GET" class="relative">
+          <input type="text" name="q" value="{{ query or '' }}" placeholder="Поиск статей, тегов, авторов..."
+                 class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:border-indigo-500 focus:outline-none">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">🔍</div>
+        </form>
+      </div>
+      {% if session.get('user_id') %}
+      <div class="flex items-center space-x-4">
+        <span class="text-sm text-gray-400">Здравствуйте, <span class="text-indigo-400 font-medium">{{ session.get('username', 'Пользователь') }}</span></span>
+        <a href="{{ url_for('profile_page') }}" class="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm">Профиль</a>
+        <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition">Выйти</a>
+      </div>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="flex-grow container mx-auto px-6 py-10">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="border-l-4 border-green-500 bg-gray-800 p-4 rounded text-green-300 text-sm">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Hero -->
+    <section class="bg-gray-900 border border-gray-800 rounded-xl p-10 mb-10 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">🔍 Результаты поиска</h1>
+      {% if query %}
+      <p class="text-gray-400 mb-2">Поиск по запросу: <span class="text-indigo-400 font-medium">"{{ query }}"</span></p>
+      {% endif %}
+      {% if category %}
+      <p class="text-gray-400 mb-2">Фильтр по категории: <span class="text-indigo-400 font-medium">{{ category }}</span></p>
+      {% endif %}
+    </section>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Articles -->
+      <div class="lg:col-span-2 space-y-4">
+        {% if articles %}
+        {% for article in articles %}
+        <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 hover:border-indigo-500 transition">
+          <div class="flex justify-between items-start mb-2">
+            <a href="{{ url_for('view_article', id=article.id) }}" class="text-white font-medium hover:text-indigo-400">{{ article.title }}</a>
+            {% if article.status == 'published' %}
+            <span class="text-xs px-2 py-1 bg-green-700 text-green-100 rounded">Опубликовано</span>
+            {% else %}
+            <span class="text-xs px-2 py-1 bg-yellow-700 text-yellow-100 rounded">Черновик</span>
+            {% endif %}
+          </div>
+          <p class="text-gray-400 text-sm mb-3">{{ article.excerpt or article.content[:150] + '...' }}</p>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>{{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            <div class="space-x-3">
+              <a href="{{ url_for('view_article', id=article.id) }}" class="hover:text-gray-300">Просмотр</a>
+              <a href="{{ url_for('edit_article', id=article.id) }}" class="hover:text-gray-300">Редактировать</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-12 text-gray-500 text-sm">
+          Ничего не найдено.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <h3 class="text-sm font-semibold text-white mb-4">Быстрые действия</h3>
+          <div class="flex flex-col gap-3 text-sm">
+            <a href="{{ url_for('create_article') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-center">Создать</a>
+            <a href="{{ url_for('my_articles') }}" class="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:border-indigo-500 hover:text-indigo-400 transition text-center">Мои статьи</a>
+            <a href="{{ url_for('search') }}" class="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:border-indigo-500 hover:text-indigo-400 transition text-center">Поиск</a>
+            <a href="{{ url_for('about_us') }}" class="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:border-indigo-500 hover:text-indigo-400 transition text-center">О нас</a>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <h3 class="text-sm font-semibold text-white mb-4">Категории</h3>
+          <div class="space-y-2 text-sm">
+            <a href="{{ url_for('search') }}?category=Технологии" class="block text-gray-400 hover:text-indigo-400">Технологии</a>
+            <a href="{{ url_for('search') }}?category=Наука" class="block text-gray-400 hover:text-indigo-400">Наука</a>
+            <a href="{{ url_for('search') }}?category=Спорт" class="block text-gray-400 hover:text-indigo-400">Спорт</a>
+            <a href="{{ url_for('search') }}?sort=popular" class="block text-gray-400 hover:text-indigo-400">Популярные</a>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <h3 class="text-sm font-semibold text-white mb-4">Совет дня</h3>
+          <p class="text-gray-400 text-sm">Используйте поиск для нахождения статей по темам и отслеживания трендов.</p>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 border-t border-gray-800 mt-auto">
+    <div class="container mx-auto px-6 py-4 text-center text-gray-500 text-xs">
+      &copy; 2025 NewsWrite Pro. Все права защищены.
+    </div>
+  </footer>
+</body>
+</html>
