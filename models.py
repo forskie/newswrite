@@ -39,8 +39,8 @@ class ArticleModel(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.String(20), default='draft')  # draft or published
-    tags = db.Column(db.String(500))  # comma-separated tags
+    status = db.Column(db.String(20), default='draft')  
+    tags = db.Column(db.String(500)) 
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
