@@ -65,12 +65,20 @@
             <p class="text-gray-400 text-sm">Возраст</p>
             <p class="text-white font-medium">{{ user.age if user else 'Не указан' }}</p>
           </div>
+          <div>
+            <p class="text-gray-400 text-sm">Аватар</p>
+            <div class="mt-2">
+              <img src="{{ user.get_avatar_url() if user else url_for('static', filename='default.png') }}" 
+                   alt="Avatar" 
+                   class="w-16 h-16 rounded-full object-cover border-2 border-gray-700">
+            </div>
+          </div>
         </div>
 
         <hr class="border-gray-700">
 
         <h2 class="text-lg font-semibold text-white">Редактировать профиль</h2>
-        <form action="{{ url_for('profile_page') }}" method="POST" class="space-y-4">
+        <form action="{{ url_for('profile_page') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
           <div>
             <label for="username" class="block text-gray-400 mb-1">Имя пользователя</label>
             <input type="text" id="username" name="username" value="{{ session.get('username') }}"
@@ -85,6 +93,12 @@
             <label for="age" class="block text-gray-400 mb-1">Возраст</label>
             <input type="number" id="age" name="age" value="{{ user.age if user else '' }}"
                    class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label for="avatar" class="block text-gray-400 mb-1">Аватар</label>
+            <input type="file" id="avatar" name="avatar" accept=".png,.jpg,.jpeg,.gif"
+                   class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+            <small class="text-gray-500 text-xs">Допустимые форматы: PNG, JPG, JPEG, GIF. Максимум 16MB</small>
           </div>
           <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
             Сохранить изменения

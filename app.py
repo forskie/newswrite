@@ -4,8 +4,22 @@ from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from flask_sqlalchemy import pagination
+from datetime import time
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads/avatars'
+app.config['ARTICLE_UPLOAD_FOLDER'] = 'static/uploads/articles'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['ARTICLE_UPLOAD_FOLDER'], exist_ok=True) 
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.secret_key = 'your_secret_key'
 bcrypt = Bcrypt(app)
@@ -85,46 +99,67 @@ def about_us():
     recent_activities = [] 
     return render_template('about.html', recent_activities=recent_activities)
 
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile_page():
     user = UserModel.query.get(session['user_id'])
-    articles = ArticleModel.query.filter_by(author_id=user.id).all()
+    if not user:
+        flash('User not found')
+        return redirect(url_for('sign_in_page'))  # Changed from 'login' to 'sign_in_page'
     
+    articles = ArticleModel.query.filter_by(author_id=user.id).all()
     stats = {
         'total_articles': len(articles),
         'published_articles': len([a for a in articles if a.status == 'published']),
         'draft_articles': len([a for a in articles if a.status == 'draft']),
-        'total_views': sum(getattr(a, 'views', 0) for a in articles)  # assuming ArticleModel has a views column
+        'total_views': sum(getattr(a, 'views', 0) for a in articles)
     }
-    
     recent_articles = ArticleModel.query.filter_by(author_id=user.id).order_by(ArticleModel.created_at.desc()).limit(5).all()
+    
     if request.method == 'POST':
         username = request.form.get('username', user.username)
         email = request.form.get('email', user.email)
-        age = request.form.get('age', user.age)
+        age_str = request.form.get('age')
+        age = int(age_str) if age_str and age_str.isdigit() else user.age
+        
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            if allowed_file(avatar_file.filename):
+                filename = secure_filename(avatar_file.filename)
+                ext = filename.rsplit('.', 1)[1] if '.' in filename else ''
+                new_filename = f'avatar_{user.id}_{int(datetime.now().timestamp())}.{ext}'  # Fixed time import
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                avatar_file.save(file_path)
+                
+                if user.avatar and user.avatar != 'default.png':
+                    old_avatar_path = os.path.join('static/uploads/avatars', user.avatar.split('/')[-1])
+                    if os.path.exists(old_avatar_path):
+                        try:
+                            os.remove(old_avatar_path)
+                        except OSError:
+                            pass
+                
+                user.avatar = new_filename  
+            else: 
+                flash('Неправильное расширение, допустимые расширения: PNG, JPG, JPEG, GIF')
+                return render_template('user_profile.html', user=user, stats=stats, recent_articles=recent_articles, recent_activities=[])
         
         user.username = username
         user.email = email
         user.age = age
+        
         try:
             db.session.commit()
-            session['username'] = user.username 
+            session['username'] = user.username
             flash('Профиль успешно обновлен!')
             return redirect(url_for('profile_page'))
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при обновлении профиля: {str(e)}')
-
-    recent_activities = []
     
-    return render_template(
-        'user_profile.html',
-        user=user,
-        stats=stats,
-        recent_articles=recent_articles,
-        recent_activities=recent_activities
-    )
+    recent_activities = []
+    return render_template('user_profile.html', user=user, stats=stats, recent_articles=recent_articles, recent_activities=recent_activities)
 
 # Поиск
 @app.route('/search', methods=['GET'])
@@ -175,18 +210,33 @@ def create_article():
         status = request.form.get('status', 'draft')
         tags = request.form.get('tags', '')
         action = request.form.get('action', 'draft')
-        
+        articles_img = request.files.get('articles_img')
+
         if not title or not content or not category:
             flash("Заголовок, содержание и категория обязательны!")
             return render_template('create_articles.html')
         
+        image_path = None
+        if articles_img and articles_img.filename: 
+            if allowed_file(articles_img.filename):
+                filename = secure_filename(articles_img.filename)
+                ext = filename.rsplit('.', 1)[1] if '.' in filename else ''
+                new_filename = f'article_{session["user_id"]}_{int(datetime.now().timestamp())}.{ext}'
+                file_path = os.path.join(app.config['ARTICLE_UPLOAD_FOLDER'], new_filename)
+                articles_img.save(file_path)
+                image_path = new_filename
+            else:
+                flash('Неправильное расширение изображения, допустимые расширения: PNG, JPG, JPEG, GIF')
+                return render_template('create_articles.html')
+
         new_article = ArticleModel(
             title=title,
             content=content,
             category=category,
             status=status if action != 'publish' else 'published',
             tags=tags,
-            author_id=session['user_id']
+            author_id=session['user_id'],
+            articles_img=image_path,
         )
         
         try:
@@ -219,7 +269,6 @@ def view_article(id):
     article = ArticleModel.query.get_or_404(id)
     return render_template('view_articles.html', article=article)
 
-
 @app.route('/edit-article/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_article(id):
@@ -231,44 +280,57 @@ def edit_article(id):
         category = request.form.get('category')
         tags = request.form.get('tags', '')
         action = request.form.get('action', 'save')
-        
+        articles_img = request.files.get('articles_img')
+
         if not title or not content or not category:
             flash('Заголовок, содержание и категория обязательны!')
             return render_template('edit_articles.html', article=article)
         
+        if articles_img and articles_img.filename:
+            if allowed_file(articles_img.filename):
+                filename = secure_filename(articles_img.filename)
+                ext = filename.rsplit('.', 1)[1] if '.' in filename else ''
+                new_filename = f'article_{session["user_id"]}_{int(datetime.now().timestamp())}.{ext}'
+                file_path = os.path.join(app.config['ARTICLE_UPLOAD_FOLDER'], new_filename)
+                articles_img.save(file_path)
+                if article.articles_img and article.articles_img != 'default.png': 
+                    old_image_path = os.path.join(app.config['ARTICLE_UPLOAD_FOLDER'], article.articles_img)
+                    if os.path.exists(old_image_path):
+                        try:
+                            os.remove(old_image_path)
+                        except OSError:
+                            pass
+                article.articles_img = new_filename  
+            else:
+                flash('Неправильное расширение изображения, допустимые расширения: PNG, JPG, JPEG, GIF')
+                return render_template('edit_articles.html', article=article)
+
         article.title = title
         article.content = content
         article.category = category
         article.tags = tags
         article.updated_at = datetime.utcnow()
-        
-    
         if action == 'publish':
             article.status = 'published'
         elif action == 'draft':
             article.status = 'draft'
-        else:
-            pass
 
         try:
             db.session.commit()
-            
             if action == 'publish':
                 flash('Статья успешно обновлена и опубликована!')
             elif action == 'draft':
                 flash('Статья сохранена как черновик!')
             else:
                 flash('Все изменения сохранены!')
-                
             return redirect(url_for('view_article', id=article.id))
-            
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при обновлении статьи: {str(e)}')
             print(e)
+            return render_template('edit_articles.html', article=article)
 
     return render_template('edit_articles.html', article=article)
-
 
 @app.route('/delete-article/<int:id>', methods=['GET', 'POST'])
 @login_required

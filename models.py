@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from sqlalchemy.sql import func
+from flask import url_for
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -12,10 +13,17 @@ class UserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(80), unique=True, nullable=False)
-    age = db.Column(db.Integer())
+    age = db.Column(db.Integer(), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     articles = db.relationship('ArticleModel', backref='author', lazy=True)
+    avatar = db.Column(db.String(255), default='default.png')
 
+    def get_avatar_url(self):
+        if self.avatar and self.avatar != 'default.png':
+            return url_for('static', filename=f'uploads/avatars/{self.avatar}')
+        else:
+            return url_for('static', filename='default.png')  # Make sure you have this file
+    
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -41,7 +49,8 @@ class ArticleModel(db.Model):
     category = db.Column(db.String(50), nullable=False)
     status = db.Column(db.String(20), default='draft')  
     tags = db.Column(db.String(500)) 
-    
+    articles_img = db.Column(db.String(255), nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

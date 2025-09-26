@@ -61,12 +61,27 @@
       </div>
     </div>
 
+    <!-- Article Image -->
+    {% if article.articles_img %}
+    <div class="w-full">
+      <img src="{{ url_for('static', filename='uploads/articles/' + article.articles_img) }}"
+          alt="{{ article.title }}"
+          class="w-full h-64 sm:h-96 object-cover rounded-lg border border-gray-800">
+    </div>
+    {% endif %}
+
     <!-- Author Info -->
     <div class="flex items-center space-x-4 text-sm text-gray-400">
       <div class="flex items-center space-x-2">
+        {% if article.author.avatar %}
+        <img src="{{ url_for('static', filename='uploads/avatars/' + article.author.avatar) }}" 
+             alt="{{ article.author.username }}" 
+             class="w-8 h-8 rounded-full object-cover">
+        {% else %}
         <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
           <span class="text-white font-bold">{{ article.author.username[0].upper() }}</span>
         </div>
+        {% endif %}
         <span>{{ article.author.username }}</span>
       </div>
       <span>• {{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
@@ -91,53 +106,92 @@
       {{ article.content|safe }}
     </div>
 
-    <!-- Likes and comments -->
-<!-- Likes & Comments -->
-<div class="mt-8 border-t border-gray-800 pt-6 space-y-6">
+    <!-- Likes & Comments -->
+    <div class="mt-8 border-t border-gray-800 pt-6 space-y-6">
 
-  <!-- Likes -->
-  <form action="{{ url_for('like_article', id=article.id) }}" method="POST">
-    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex items-center space-x-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-      </svg>
-      <span>❤️ {{ article.likes|length }} Лайков</span>
-    </button>
-  </form>
+      <!-- Likes -->
+      {% if session.get('user_id') %}
+      <form action="{{ url_for('like_article', id=article.id) }}" method="POST">
+        {% set user_liked = article.likes|selectattr('user_id', 'equalto', session.get('user_id'))|list|length > 0 %}
+        <button type="submit" class="px-4 py-2 {{ 'bg-red-600 hover:bg-red-700' if user_liked else 'bg-indigo-600 hover:bg-indigo-700' }} text-white rounded transition flex items-center space-x-2">
+          <span>{{ '❤️' if user_liked else '🤍' }} {{ article.likes|length }} {{ 'Лайк' if article.likes|length == 1 else 'Лайков' }}</span>
+        </button>
+      </form>
+      {% else %}
+      <div class="flex items-center space-x-2 text-gray-400">
+        <span>🤍 {{ article.likes|length }} {{ 'Лайк' if article.likes|length == 1 else 'Лайков' }}</span>
+        <span class="text-sm">• <a href="{{ url_for('sign_in_page') }}" class="text-indigo-400 hover:text-indigo-300 underline">Войдите</a> чтобы поставить лайк</span>
+      </div>
+      {% endif %}
 
-  <!-- Add Comment -->
-  {% if session.get('user_id') %}
- <form action="{{ url_for('add_comment', id=article.id) }}" method="POST" class="mt-4">
-    <textarea name="content" class="w-full p-2 rounded bg-gray-800 text-gray-200" placeholder="Ваш комментарий"></textarea>
-    <button type="submit" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Отправить</button>
-</form>
+      <!-- Add Comment -->
+      {% if session.get('user_id') %}
+      <form action="{{ url_for('add_comment', id=article.id) }}" method="POST" class="space-y-3">
+        <label for="content" class="block text-sm font-medium text-gray-300">Добавить комментарий:</label>
+        <textarea name="content" 
+                  id="content"
+                  required
+                  rows="3"
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-y" 
+                  placeholder="Ваш комментарий..."></textarea>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+          Отправить комментарий
+        </button>
+      </form>
+      {% else %}
+      <p class="text-gray-400 text-sm">
+        Чтобы оставить комментарий, 
+        <a href="{{ url_for('sign_in_page') }}" class="text-indigo-400 hover:text-indigo-300 underline">войдите в аккаунт</a>.
+      </p>
+      {% endif %}
 
-  {% else %}
-  <p class="text-gray-400 text-sm mt-2">Чтобы оставить комментарий, <a href="{{ url_for('sign_in_page') }}" class="text-indigo-400 hover:text-indigo-300 underline">войдите в аккаунт</a>.</p>
-  {% endif %}
-
-  <!-- Comments List -->
-  <div class="mt-6 space-y-4">
-    <h2 class="text-xl font-bold text-white">Комментарии ({{ article.comments|length }})</h2>
-    {% for comment in article.comments %}
-    <div class="p-4 bg-gray-800 rounded-lg">
-      <div class="flex justify-between items-center text-sm text-gray-400">
-        <span>{{ comment.user.username }} • {{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-        {% if comment.user_id == session.get('user_id') %}
-        <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" class="inline">
-          <button type="submit" class="text-red-500 hover:text-red-400 text-sm">Удалить</button>
-        </form>
+      <!-- Comments List -->
+      <div class="space-y-4">
+        <h2 class="text-xl font-bold text-white">
+          Комментарии ({{ article.comments|length }})
+        </h2>
+        {% if article.comments %}
+          {% for comment in article.comments|sort(attribute='created_at', reverse=true) %}
+          <div class="p-4 bg-gray-800 border border-gray-700 rounded-lg">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center space-x-3 text-sm text-gray-400">
+                {% if comment.user.avatar %}
+                <img src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}" 
+                     alt="{{ comment.user.username }}" 
+                     class="w-6 h-6 rounded-full object-cover">
+                {% else %}
+                <div class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                  <span class="text-xs text-white font-bold">{{ comment.user.username[0].upper() }}</span>
+                </div>
+                {% endif %}
+                <span class="font-medium text-gray-300">{{ comment.user.username }}</span>
+                <span>• {{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+              </div>
+              {% if comment.user_id == session.get('user_id') %}
+              <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" class="inline">
+                <button type="submit" 
+                        onclick="return confirm('Вы уверены, что хотите удалить этот комментарий?')"
+                        class="text-red-500 hover:text-red-400 text-sm px-2 py-1 rounded hover:bg-red-900 hover:bg-opacity-20 transition">
+                  Удалить
+                </button>
+              </form>
+              {% endif %}
+            </div>
+            <p class="text-gray-200 mt-2 leading-relaxed">{{ comment.content }}</p>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-gray-500 text-center py-8">Пока нет комментариев. Будьте первым!</p>
         {% endif %}
       </div>
-      <p class="text-gray-200 mt-1">{{ comment.content }}</p>
-    </div>
-    {% endfor %}
-  </div>
 
-</div>
+    </div>
+
     <!-- Footer Buttons -->
-    <div class="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-4 sm:space-y-0">
-      <a href="{{ url_for('my_articles') }}" class="px-6 py-3 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition">Все статьи</a>
+    <div class="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-4 sm:space-y-0 pt-6 border-t border-gray-800">
+      <a href="{{ url_for('my_articles') }}" class="px-6 py-3 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition">
+        ← Все статьи
+      </a>
       <div class="flex space-x-3">
         {% if session.get('user_id') == article.author_id %}
         <a href="{{ url_for('edit_article', id=article.id) }}" class="px-6 py-3 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition">Редактировать</a>
@@ -152,7 +206,7 @@
 
 <!-- Delete Modal -->
 <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-  <div class="bg-gray-900 rounded-xl p-6 max-w-md w-full">
+  <div class="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4">
     <h3 class="text-xl font-bold text-white mb-4">Подтвердите удаление</h3>
     <p class="text-gray-400 mb-6">Вы уверены, что хотите удалить эту статью? Это действие нельзя отменить.</p>
     <div class="flex justify-end space-x-4">
