@@ -1,13 +1,16 @@
-
 # 📰 NewsWrite
 
 > Современное веб-приложение для создания и публикации статей с полноценной системой взаимодействия
+
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 📋 Описание
 
 NewsWrite — это интуитивное веб-приложение для написания и публикации статей. Проект демонстрирует полноценный стек технологий для создания современного блог-платформы с системой авторизации, комментариев и социальных взаимодействий.
 
-Основные возможности
+### ✨ Основные возможности
 
 - 🔐 **Полная система аутентификации**
   - Регистрация пользователей через email
@@ -33,7 +36,7 @@ NewsWrite — это интуитивное веб-приложение для �
 ## 🛠️ Технологический стек
 
 ### Backend
-- **Python 3.12.10** — основной язык программирования
+- **Python 3.9+** — основной язык программирования
 - **Flask 3.0** — веб-фреймворк
 - **Flask-SQLAlchemy** — ORM для работы с базой данных
 - **Flask-Login** — управление сессиями пользователей
@@ -123,37 +126,23 @@ flask run
 ```
 newswrite/
 │
-├── app/
-│   ├── __init__.py           # Инициализация Flask приложения
-│   ├── models.py             # Модели базы данных
-│   ├── forms.py              # Формы WTForms
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── auth.py           # Роуты авторизации
-│   │   ├── articles.py       # Роуты для статей
-│   │   └── comments.py       # Роуты комментариев
-│   ├── templates/            # HTML шаблоны
-│   │   ├── base.html
-│   │   ├── index.html
-│   │   ├── auth/
-│   │   └── articles/
-│   └── static/               # Статические файлы
-│       ├── css/
-│       ├── js/
-│       └── uploads/          # Загруженные файлы
-│
 ├── migrations/               # Миграции базы данных
-├── tests/                    # Тесты
-│   ├── test_auth.py
-│   ├── test_articles.py
-│   └── test_comments.py
+├── static/                   # Статические файлы
+│   ├── css/
+│   ├── js/
+│   └── uploads/              # Загруженные изображения
+├── templates/                # HTML шаблоны (Jinja2)
+│   ├── base.html
+│   ├── index.html
+│   ├── auth/
+│   └── articles/
 │
-├── .env.example              # Пример переменных окружения
 ├── .gitignore               # Git ignore файл
+├── README.md                # Документация
+├── app.py                   # Главный файл приложения
 ├── config.py                # Конфигурация приложения
-├── requirements.txt         # Python зависимости
-├── run.py                   # Точка входа
-└── README.md                # Документация
+├── models.py                # Модели базы данных
+└── requirements.txt         # Python зависимости
 ```
 
 ## 🔑 Основные модели данных
