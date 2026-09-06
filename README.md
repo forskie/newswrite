@@ -270,10 +270,6 @@ docker-compose up
 4. Запушьте в ветку (`git push origin feature/AmazingFeature`)
 5. Откройте Pull Request
 
-## 📝 Лицензия
-
-Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
-
 ## 👤 Автор
 
 **forskie**
